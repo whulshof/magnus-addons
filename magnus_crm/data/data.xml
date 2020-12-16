@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!--
+        Resource: crm.lead
+        -->
+        <record id="dummy_crm_lead" model="crm.lead">
+            <field name="name">Dummy Actuals Report</field>
+            <field name="subject">No Lead</field>
+            <field name="type">'opportunity'</field>
+            <field name="operating_unit_id">'6'</field>
+        </record>
+    </data>
+</odoo>

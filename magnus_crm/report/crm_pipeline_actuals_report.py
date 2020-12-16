@@ -132,11 +132,12 @@ class CrmPipelineActualsReport(models.Model):
         CREATE OR REPLACE VIEW crm_pipeline_actuals_report AS (
             WITH query01 as (
             SELECT 
-                    sum(aal.amount) as amount, 
-                    dr.id as month, 
-                    aml.operating_unit_id as operating_unit, 
-                    pp.id as project_id
-            FROM account_analytic_line aal
+                sum(aal.amount) as amount, 
+                aal.date as date,
+                dr.id as month, 
+                aml.operating_unit_id as operating_unit, 
+                pp.id as project_id
+                FROM account_analytic_line aal
             LEFT JOIN date_range dr on (
                 dr.type_id = 2 AND 
                 dr.date_start <= aal.date AND 
@@ -151,16 +152,21 @@ class CrmPipelineActualsReport(models.Model):
             LEFT JOIN project_project pp ON (
                 pp.analytic_account_id = aal.account_id
                 )
+            LEFT JOIN account_account_type aat ON (
+                aat.id = aa.user_type_id
+                )
             WHERE 
-                aa.code = '8100' AND 
-                aal.move_id is not NULL
+                aat.name = 'Income' AND 
+                aal.move_id is not NULL AND
+                pp.id is not NULL
             GROUP BY 
+                aal.date,
                 dr.id, 
                 aml.operating_unit_id,   
                 pp.id)
                 
                 SELECT 
-                    crs.id AS id,
+                    row_number() OVER () AS id,
                     sum(query01.amount) AS total_actuals_amount,
                     sum(CASE
                         WHEN query01.operating_unit = '6'
@@ -182,14 +188,26 @@ class CrmPipelineActualsReport(models.Model):
                         THEN query01.amount
                         ELSE 0
                     END) AS actuals_black_amount,
-                    crs.project_id AS project_id,
-                    crs.month AS month,
-                    crs.operating_unit_id AS operating_unit_id,
+                    query01.project_id AS project_id,
+                    CASE
+                        WHEN crs.month is NULL
+                        THEN query01.month
+                        ELSE crs.month
+                    END AS month,
+                    CASE
+                        WHEN crs.operating_unit_id is NULL
+                        THEN query01.operating_unit
+                        ELSE crs.operating_unit_id
+                    END AS operating_unit_id,
                     crs.partner_id AS partner_id,
                     crs.user_id AS user_id,
                     crs.department_id AS department_id,
                     crs.name AS name,
-                    crs.lead_id AS lead_id,
+                    CASE
+                        WHEN crs.lead_id is NULL
+                        THEN '1'
+                        ELSE crs.lead_id
+                    END AS lead_id,
                     crs.total_revenue AS total_revenue,
                     crs.total_revenue_per AS total_revenue_per,
                     crs.magnus_red_bv_amount AS magnus_red_bv_amount,
@@ -202,15 +220,15 @@ class CrmPipelineActualsReport(models.Model):
                     crs.magnus_black_bv_per AS magnus_black_bv_per
                 FROM 
                     query01
-                RIGHT JOIN	crm_revenue_split crs ON (
+                FULL OUTER JOIN	crm_revenue_split crs ON (
                     query01.month = crs.month AND
                     query01.project_id = crs.project_id)
                 GROUP BY 
                     query01.operating_unit,
-                    crs.id,
-                    crs.project_id,
-                    crs.month,
                     crs.operating_unit_id,
+                    query01.project_id,
+                    query01.month,
+                    crs.month,
                     crs.partner_id,
                     crs.user_id,
                     crs.department_id,

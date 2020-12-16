@@ -58,7 +58,8 @@ class Lead(models.Model):
 
     start_date = fields.Date('Start Date')
     end_date = fields.Date('End Date')
-    project_id = fields.Many2one('project.project', string='Project')
+    project_id = fields.Many2one('project.project', string='Related Project')
+    project_ids = fields.One2many('project.project', 'lead_id', string='Linked for Actuals')
     subject = fields.Char('Subject')
     operating_unit_id = fields.Many2one('operating.unit', string='Operating Unit', required=True)
     contract_signed = fields.Boolean(string='Contract Signed')

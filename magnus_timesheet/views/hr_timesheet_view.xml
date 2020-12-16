@@ -46,8 +46,11 @@
         <xpath expr="//field[@name='date_to']" position="attributes">
           <attribute name="readonly">1</attribute>
         </xpath>
+        <xpath expr="//tree/field[@name='project_id']" position="attributes">
+            <attribute name="required">1</attribute>
+        </xpath>
         <xpath expr="//tree/field[@name='unit_amount']" position="after">
-          <field name="kilometers" style="border-color:#7F8C8D;"/>
+          <field name="kilometers" style="border-color:#7F8C8D;" string="KM's" sum="KM's"/>
         </xpath>
         <xpath expr="//form/group/field[@name='user_id']" position="after">
             <field name="operating_unit_id" attrs="{'invisible':[('operating_unit_id', '=', False)]}"/>
@@ -62,6 +65,7 @@
       <field name="arch" type="xml">
           <xpath expr="//tree/field[@name='task_id']" position="attributes">
             <attribute name="domain">[('project_id','=',project_id)]</attribute>
+            <attribute name="required">1</attribute>
           </xpath>
       </field>
     </record>
